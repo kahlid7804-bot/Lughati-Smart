@@ -26,7 +26,34 @@ jobs:
           java-version: '17'
       - name: Install Android SDK
         run: |
-          sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+          set -euo pipefail
+          SDK=""
+          for candidate in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" /usr/local/lib/android/sdk; do
+            if [ -n "$candidate" ] && [ -d "$candidate" ]; then
+              SDK="$candidate"
+              break
+            fi
+          done
+          SDK="${SDK:-$HOME/android-sdk}"
+          mkdir -p "$SDK"
+          MANAGER="$(find "$SDK/cmdline-tools" -type f -name sdkmanager -print 2>/dev/null | sort -V | tail -n 1 || true)"
+          if [ -z "$MANAGER" ]; then
+            curl --fail --location --retry 3 https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o "$RUNNER_TEMP/android-tools.zip"
+            mkdir -p "$SDK/cmdline-tools/latest"
+            unzip -q "$RUNNER_TEMP/android-tools.zip" -d "$RUNNER_TEMP/android-tools"
+            cp -a "$RUNNER_TEMP/android-tools/cmdline-tools/." "$SDK/cmdline-tools/latest/"
+            MANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "$(dirname "$MANAGER")" >> "$GITHUB_PATH"
+          echo "$SDK/platform-tools" >> "$GITHUB_PATH"
+          printf 'sdk.dir=%s\n' "$SDK" > android-project/local.properties
+          "$MANAGER" --sdk_root="$SDK" --version
+          set +o pipefail
+          yes | "$MANAGER" --sdk_root="$SDK" --licenses >/dev/null
+          set -o pipefail
+          "$MANAGER" --sdk_root="$SDK" 'platforms;android-34' 'build-tools;34.0.0'
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
