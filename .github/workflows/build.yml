@@ -2,7 +2,7 @@ name: Build Android APK
 on:
   push:
     paths:
-      - 'Lughati-Android-v0.3-AI-Tutor.zip'
+      - 'Lughati-Android-v0.4.zip'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 permissions:
@@ -14,10 +14,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate and extract project
         run: |
-          test -f Lughati-Android-v0.3-AI-Tutor.zip
-          unzip -tq Lughati-Android-v0.3-AI-Tutor.zip
+          test -f Lughati-Android-v0.4.zip
+          unzip -tq Lughati-Android-v0.4.zip
           mkdir -p android-project
-          unzip -q Lughati-Android-v0.3-AI-Tutor.zip -d android-project
+          unzip -q Lughati-Android-v0.4.zip -d android-project
           test -f android-project/settings.gradle
           test -f android-project/app/build.gradle
       - uses: actions/setup-java@v4
@@ -62,6 +62,6 @@ jobs:
       - name: Publish APK
         uses: actions/upload-artifact@v4
         with:
-          name: Lughati-APK
+          name: Lughati-APK-v0.4
           path: android-project/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
