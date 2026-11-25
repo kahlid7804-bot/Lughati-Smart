@@ -16,7 +16,7 @@ server=Path("server/server.py")
 edit(server,[
 ("import os,json,urllib.request,hmac,time,threading,re","import os,json,urllib.request,urllib.error,hmac,time,threading,re"),
 (" def send(self,status,body):",''' def do_GET(self):
-  if self.path in ('/','/health'):
+  if self.path.split('?')[0].rstrip('/') in ('','/health'):
    return self.send(200,{'status':'ok','service':'Lughati-Smart'})
   return self.send(404,{'error':'not found'})
  def send(self,status,body):
@@ -62,5 +62,9 @@ edit(js,[
 ("test.innerHTML=B(r)","test.textContent=(r.ar||'')+' / '+(r.en||'')"),
 ("Native.askTutor(++aiSeq,JSON.stringify({mode:'question',context:'Synthetic connection test',answer:'Explain the Arabic noun in one sentence.',consent:true}));","""let id=++aiSeq;clearTimeout(window.aiDeadline);window.aiDeadline=setTimeout(()=>{if(id!==aiSeq)return;aiSeq++;let box=document.getElementById('connectionResult');if(box)box.textContent='انتهت مهلة الاختبار. / Connection test timed out.'},160000);try{Native.askTutor(id,JSON.stringify({mode:'diagnostic',consent:true}));}catch(err){clearTimeout(window.aiDeadline);e.textContent='تعذر بدء الاختبار. / Could not start connection test.';}"""),
 ("Native.askTutor(++aiSeq,JSON.stringify({mode:aiMode,context:aiContext.ar+'\\n'+aiContext.en,answer:a,image:window.aiImage||'',consent:true}));","""let id=++aiSeq;clearTimeout(window.aiDeadline);window.aiDeadline=setTimeout(()=>{if(id!==aiSeq)return;aiSeq++;let box=document.getElementById('aiResult'),btn=document.getElementById('aiSend');if(box)box.textContent='انتهت مهلة التصحيح. / Review timed out.';if(btn)btn.disabled=false;},160000);try{Native.askTutor(id,JSON.stringify({mode:aiMode,context:aiContext.ar+'\\n'+aiContext.en,answer:a,image:window.aiImage||'',consent:true}));}catch(err){clearTimeout(window.aiDeadline);out.textContent='تعذر بدء التصحيح. / Could not start review.';document.getElementById('aiSend').disabled=false;}""")
+])
+edit(js,[
+("e.innerHTML=L('جارٍ اختبار الخادم بنص تجريبي فقط…','Testing the server using synthetic text only…');", """let url=document.getElementById('aiUrl').value.trim(),token=document.getElementById('aiToken').value.trim();if(!url.startsWith('https://')||token.length<16){e.textContent='تحقق من الرابط الكامل ورمز الوصول (16 حرفاً على الأقل). / Check full HTTPS URL and token (at least 16 characters).';return;}try{if(!Native.configureTutor(url,token)){e.textContent='تعذر حفظ الإعدادات. / Invalid connection settings.';return;}}catch(err){e.textContent='تعذر الاتصال بواجهة أندرويد. / Android bridge unavailable.';return;}e.textContent='تم حفظ الإعدادات؛ جار اختبار الاتصال (نسخة التشخيص 2). / Settings saved; testing connection (diagnostics 2).';"""),
+("if(!window.Native){e.innerHTML=L('يتطلب تطبيق أندرويد','Requires Android app');return}", "if(!window.Native){e.textContent='يتطلب تطبيق أندرويد. / Requires Android app.';return}")
 ])
 print("Diagnostics applied successfully")
