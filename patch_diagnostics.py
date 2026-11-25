@@ -67,4 +67,59 @@ edit(js,[
 ("e.innerHTML=L('جارٍ اختبار الخادم بنص تجريبي فقط…','Testing the server using synthetic text only…');", """let url=document.getElementById('aiUrl').value.trim(),token=document.getElementById('aiToken').value.trim();if(!url.startsWith('https://')||token.length<16){e.textContent='تحقق من الرابط الكامل ورمز الوصول (16 حرفاً على الأقل). / Check full HTTPS URL and token (at least 16 characters).';return;}try{if(!Native.configureTutor(url,token)){e.textContent='تعذر حفظ الإعدادات. / Invalid connection settings.';return;}}catch(err){e.textContent='تعذر الاتصال بواجهة أندرويد. / Android bridge unavailable.';return;}e.textContent='تم حفظ الإعدادات؛ جار اختبار الاتصال (نسخة التشخيص 2). / Settings saved; testing connection (diagnostics 2).';"""),
 ("if(!window.Native){e.innerHTML=L('يتطلب تطبيق أندرويد','Requires Android app');return}", "if(!window.Native){e.textContent='يتطلب تطبيق أندرويد. / Requires Android app.';return}")
 ])
+# Native diagnostic dialog bypasses WebView callback and JavaScript timers.
+p=root/java
+s=p.read_text(encoding="utf-8")
+anchor=" @JavascriptInterface public void clearTutor()"
+if anchor not in s: raise RuntimeError("Missing bridge anchor")
+s=s.replace(anchor,''' @JavascriptInterface public void testTutorNative(){
+ runOnUiThread(()->{
+  android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(MainActivity.this).setTitle("اختبار الاتصال / Connection test").setMessage("Starting HTTPS health check…").setPositiveButton("Close",null).create();
+  dialog.show();
+  android.os.Handler handler=new android.os.Handler(android.os.Looper.getMainLooper());
+  java.util.concurrent.atomic.AtomicBoolean done=new java.util.concurrent.atomic.AtomicBoolean(false);
+  handler.postDelayed(()->{if(done.compareAndSet(false,true))dialog.setMessage("انتهت المهلة / Diagnostic timed out");},160000);
+  new Thread(()->{
+   String msg;
+   javax.net.ssl.HttpsURLConnection conn=null;
+   try{
+    android.content.SharedPreferences pref=getSharedPreferences("tutor",0);
+    String base=pref.getString("url","");
+    if(!base.startsWith("https://"))throw new IllegalArgumentException("HTTPS configuration missing");
+    handler.post(()->dialog.setMessage("1/2: Checking HTTPS server…"));
+    conn=(javax.net.ssl.HttpsURLConnection)new java.net.URL(base+"/health").openConnection();
+    conn.setConnectTimeout(25000);conn.setReadTimeout(75000);conn.setInstanceFollowRedirects(false);
+    int health=conn.getResponseCode();conn.disconnect();conn=null;
+    if(health!=200)throw new java.io.IOException("Health HTTP "+health);
+    handler.post(()->dialog.setMessage("2/2: HTTPS OK. Testing OpenAI with synthetic text…"));
+    conn=(javax.net.ssl.HttpsURLConnection)new java.net.URL(base+"/tutor").openConnection();
+    conn.setConnectTimeout(25000);conn.setReadTimeout(75000);conn.setInstanceFollowRedirects(false);
+    conn.setRequestMethod("POST");conn.setDoOutput(true);
+    conn.setRequestProperty("Content-Type","application/json");
+    conn.setRequestProperty("Authorization","Bearer "+pref.getString("token",""));
+    byte[] payload=new org.json.JSONObject().put("mode","diagnostic").put("consent",true).toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    conn.setFixedLengthStreamingMode(payload.length);
+    try(java.io.OutputStream output=conn.getOutputStream()){output.write(payload);}
+    int status=conn.getResponseCode();
+    java.io.InputStream stream=status==200?conn.getInputStream():conn.getErrorStream();
+    String raw="";
+    if(stream!=null){try(java.io.InputStream in=stream;java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream()){byte[] buf=new byte[2048];int n;while((n=in.read(buf))!=-1){out.write(buf,0,n);if(out.size()>100000)throw new java.io.IOException("Response too large");}raw=out.toString("UTF-8");}}
+    if(status==200){org.json.JSONObject data=new org.json.JSONObject(raw);msg=data.optString("ar")+" / "+data.optString("en");}
+    else{String code="";try{code=new org.json.JSONObject(raw).optString("error","");}catch(Exception ignored){}if(!code.matches("[a-zA-Z0-9_ ]{0,80}"))code="";msg="HTTPS OK; Tutor HTTP "+status+" "+code;}
+   }catch(Exception ex){msg="Connection failed / فشل الاتصال: "+ex.getClass().getSimpleName();if(ex instanceof java.io.IOException && ex.getMessage()!=null && ex.getMessage().matches("Health HTTP [0-9]+"))msg+=" "+ex.getMessage();}
+   finally{if(conn!=null)conn.disconnect();}
+   final String result=msg;handler.post(()->{if(done.compareAndSet(false,true))dialog.setMessage(result);});
+  }).start();
+ });
+ }
+'''+anchor,1)
+s=s.replace(" class Bridge {"," public class Bridge {",1)
+p.write_text(s,encoding="utf-8")
+p=root/js
+s=p.read_text(encoding="utf-8")
+old="try{Native.askTutor(id,JSON.stringify({mode:'diagnostic',consent:true}));}"
+new="try{clearTimeout(window.aiDeadline);e.textContent='اختبار أندرويد المباشر (3) / Native diagnostic 3';Native.testTutorNative();}"
+if old not in s: raise RuntimeError("Missing diagnostic call")
+s=s.replace(old,new,1)
+p.write_text(s,encoding="utf-8")
 print("Diagnostics applied successfully")
