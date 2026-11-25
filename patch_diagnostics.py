@@ -121,5 +121,15 @@ old="try{Native.askTutor(id,JSON.stringify({mode:'diagnostic',consent:true}));}"
 new="try{clearTimeout(window.aiDeadline);e.textContent='اختبار أندرويد المباشر (3) / Native diagnostic 3';Native.testTutorNative();}"
 if old not in s: raise RuntimeError("Missing diagnostic call")
 s=s.replace(old,new,1)
+# Replace the entire test function, not just its final call: no JS timers or callback dependency.
+start=s.index("function testTutor(){")
+end=s.index("\n",start) if "\n" in s[start:] else len(s)
+s=s[:start]+"""function testTutor(){const e=document.getElementById('connectionResult');e.textContent='Diagnostics 4 / اختبار مباشر';try{const url=document.getElementById('aiUrl').value.trim();const token=document.getElementById('aiToken').value.trim();if(!window.Native||!Native.configureTutor(url,token)){e.textContent='Invalid configuration / إعدادات غير صحيحة';return;}e.textContent='Opening native test / فتح اختبار أندرويد';Native.testTutorNative();}catch(err){e.textContent='Native test failed / تعذر فتح الاختبار: '+String(err);}}"""+s[end:]
 p.write_text(s,encoding="utf-8")
+# Ensure network permission is declared.
+manifest=root/"app/src/main/AndroidManifest.xml"
+m=manifest.read_text(encoding="utf-8")
+if "android.permission.INTERNET" not in m:
+    m=m.replace("<application",'<uses-permission android:name="android.permission.INTERNET"/>\n    <application',1)
+    manifest.write_text(m,encoding="utf-8")
 print("Diagnostics applied successfully")
