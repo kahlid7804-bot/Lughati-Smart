@@ -4,6 +4,7 @@ on:
     paths:
       - 'Lughati-Android-v0.4.zip'
       - '.github/workflows/build.yml'
+      - 'patch_diagnostics.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,6 +21,8 @@ jobs:
           unzip -q Lughati-Android-v0.4.zip -d android-project
           test -f android-project/settings.gradle
           test -f android-project/app/build.gradle
+          python3 patch_diagnostics.py android-project
+          node --check android-project/app/src/main/assets/tutor.js
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -62,6 +65,6 @@ jobs:
       - name: Publish APK
         uses: actions/upload-artifact@v4
         with:
-          name: Lughati-APK-v0.4
+          name: Lughati-APK-v0.4-diagnostics
           path: android-project/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
