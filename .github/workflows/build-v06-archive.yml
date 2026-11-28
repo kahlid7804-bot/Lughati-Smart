@@ -1,14 +1,14 @@
-name: Build Lughati V0.6 archive
+name: Build Lughati V0.7 Grammar
 on:
   push:
-    branches: [version-0.6]
-    paths: ['Lughati-Android-v0.6.zip', '.github/workflows/build-v06-archive.yml']
+    branches: [version-0.7]
+    paths: ['Lughati-Android-v0.6.zip', '.github/workflows/build-v06-archive.yml', 'v07/**']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   build:
-    if: github.ref == 'refs/heads/version-0.6'
+    if: github.ref == 'refs/heads/version-0.7'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -16,6 +16,26 @@ jobs:
         run: |
           mkdir v06-source
           unzip -q Lughati-Android-v0.6.zip -d v06-source
+      - name: Integrate grammar-only V0.7 update
+        run: |
+          cp v07/grammar-v7.js v06-source/app/src/main/assets/
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('v06-source/app/src/main/assets/index.html')
+          s=p.read_text()
+          needle='<script src="extra.js"></script>'
+          assert s.count(needle)==1
+          s=s.replace(needle,needle+'<script src="grammar-v7.js"></script>')
+          s=s.replace('• 0.6<','• 0.7<').replace('• V0.6<','• V0.7<')
+          p.write_text(s)
+          p=Path('v06-source/app/build.gradle')
+          s=p.read_text().replace('versionCode 6','versionCode 7').replace("versionName '0.6'","versionName '0.7'")
+          p.write_text(s)
+          p=Path('v06-source/tests/smoke.js')
+          s=p.read_text().replace("allQ().length',ctx),150","allQ().length',ctx),570").replace('40 lessons, 150 bilingual questions','40 lessons, 570 bilingual questions')
+          s += "\nassert(vm.runInContext('grammar.every(g=>g[3].length>=20)',ctx));\nassert.equal(vm.runInContext('readingQs.flat().length',ctx),57);\nassert.equal(vm.runInContext('grammar.flatMap(g=>g[3]).length',ctx),513);\nconsole.log('PASS: 513 grammar questions, 57 unchanged reading questions');\n"
+          p.write_text(s)
+          PY
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -35,7 +55,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-      - name: Test and build V0.6
+      - name: Test and build V0.7
         working-directory: v06-source
         run: |
           node tests/smoke.js
@@ -43,6 +63,6 @@ jobs:
           gradle assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Lughati-V0.6-APK
+          name: Lughati-V0.7-APK
           path: v06-source/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
