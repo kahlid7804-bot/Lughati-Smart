@@ -2,14 +2,14 @@ name: Build Lughati V0.6 archive
 on:
   push:
     branches: [version-0.6]
-    paths: ['Lughati-Android-v0.6.zip']
+    paths: ['Lughati-Android-v0.6.zip', '.github/workflows/build-v06-archive.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   build:
     if: github.ref == 'refs/heads/version-0.6'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Extract source
@@ -20,8 +20,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - name: Use preinstalled Android SDK
+        shell: bash
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          MANAGER="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$MANAGER" ]; then MANAGER=$(find "$SDK/cmdline-tools" -name sdkmanager -type f | head -n 1); fi
+          test -x "$MANAGER"
+          (yes || true) | "$MANAGER" --licenses >/dev/null
+          "$MANAGER" --install 'platforms;android-34' 'build-tools;34.0.0'
+          echo "sdk.dir=$SDK" > v06-source/local.properties
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
