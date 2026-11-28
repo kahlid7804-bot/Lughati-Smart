@@ -1,0 +1,38 @@
+name: Build Lughati V0.6 archive
+on:
+  push:
+    branches: [version-0.6]
+    paths: ['Lughati-Android-v0.6.zip']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.ref == 'refs/heads/version-0.6'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract source
+        run: |
+          mkdir v06-source
+          unzip -q Lughati-Android-v0.6.zip -d v06-source
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-34' 'build-tools;34.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Test and build V0.6
+        working-directory: v06-source
+        run: |
+          node tests/smoke.js
+          python3 -m py_compile server/server.py
+          gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lughati-V0.6-APK
+          path: v06-source/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
