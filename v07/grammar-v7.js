@@ -4,12 +4,12 @@ const p=(ar,en)=>({ar,en});
 const add=(i,q,a,b,c,e)=>grammar[i][3].push([q,a,b,c,e]);
 const pair=(ar,en)=>p(ar,en);
 const N=[['الطالب','the student','الدرس','the lesson'],['المعلم','the teacher','الكتاب','the book'],['الطفل','the child','القصة','the story'],['الأخ','the brother','الرسالة','the letter'],['الصديق','the friend','المقال','the article']];
-const V=[['كتب','write'],['قرأ','read'],['حفظ','memorise'],['شرح','explain'],['راجع','review']];
+const V=[['كتب','write'],['درس','study'],['حفظ','memorise'],['شرح','explain'],['فحص','examine']];
 const names=[['عليّ','Ali'],['مريم','Maryam'],['سارة','Sara'],['حسن','Hasan'],['زينب','Zaynab']];
 const places=[['البصرة','Basra'],['بغداد','Baghdad'],['الموصل','Mosul'],['النجف','Najaf'],['كربلاء','Karbala']];
 const words=[['كتاب','book'],['قلم','pen'],['دفتر','notebook'],['باب','door'],['بيت','house']];
 const fem=[['طالبة','student'],['معلمة','teacher'],['مهندسة','engineer'],['طبيبة','doctor'],['كاتبة','writer']];
-const verbs=[['يكتب','write'],['يقرأ','read'],['يحفظ','memorise'],['يشرح','explain'],['يراجع','review']];
+const verbs=[['يكتب','write'],['يدرس','study'],['يحفظ','memorise'],['يشرح','explain'],['يفحص','examine']];
 const pred=[['مجتهد','hard-working'],['نشيط','active'],['حاضر','present'],['مستعد','ready'],['سعيد','happy']];
 const parse=(role,mark,ren,men)=>p(role+'، وعلامة '+(mark==='الضمة'?'رفعه':mark==='الفتحة'?'نصبه':mark==='الكسرة'?'جره':'جزمه')+' '+mark+' الظاهرة',ren+'; marked by the visible '+men);
 const nom=parse('فاعل مرفوع','الضمة','Nominative subject','damma'),obj=parse('مفعول به منصوب','الفتحة','Accusative object','fatha'),gen=parse('اسم مجرور','الكسرة','Genitive noun','kasra');
@@ -27,7 +27,7 @@ let [n,ne,o,oe]=N[j], [v,ve]=V[j], [w,we]=words[j], [f,fe]=fem[j], [name,nae]=na
 let s=v+'َ '+n+'ُ '+o+'َ.', se=ne+' performed the action '+ve+' on '+oe+'.';
 const x=(ar,en)=>p(ar,en);
 // 0: parts of speech
-Q(0,'استخرج الاسم من: '+s,se+' Extract the noun.',x(n,ne),x(v,ve),x('في','in'),'الاسم يدل على شخص أو شيء.','A noun names a person or thing.');
+Q(0,'استخرج الاسم الذي قام بالفعل من: '+s,se+' Extract the noun that performs the action.',x(n,ne),x(v,ve),x('في','in'),'الاسم يدل على شخص أو شيء.','A noun names a person or thing.');
 Q(0,'ما نوع «'+v+'» في: '+s,'What part of speech is “'+v+'” in: '+se,verb,noun,part,'يدل على حدث في الزمن الماضي.','It expresses a past action.');
 Q(0,'استخرج حرف الجر من: وضعتُ '+w+'اً في الحقيبة.','Extract the preposition: I put a '+we+' in the bag.',x('في','in'),x(w,we),x('وضعتُ','I put'),'في حرف جر.','Fi is a preposition.');
 Q(0,'أكمل بفعل مناسب: ___ '+n+'ُ '+o+'َ.','Complete with a verb: ___ '+ne+' '+oe+'.',x(v+'َ',ve),x('إلى','to'),x(w,we),'الجملة الفعلية تبدأ بفعل.','A verbal sentence begins with a verb.');
@@ -38,7 +38,7 @@ ir(1,'مررتُ بـ'+n+'ِ.',n,'اسم مجرور بالباء وعلامة ج
 Q(1,'ما نوع «هذا» في: هذا '+w+'ٌ؟','Classify “hadha” in: This is a '+we+'.',fixed,inf,verb,'هذا اسم إشارة مبني.','Hadha is a fixed-ending demonstrative.');
 // 2: proper names
 Q(2,'استخرج العلم من: زار '+name+' '+place+'.','Extract the personal proper name: '+nae+' visited '+ple+'.',x(name,nae),x(w,we),x('زار','visited'),'العلم هنا اسم شخص معين.','The proper name identifies a particular person.');
-Q(2,'أي الكلمات علم لمكان؟','Which word is a place name?',x(place,ple),x(w,we),x(f,fe),'اسم المدينة علم.','The city name is a proper noun.');
+Q(2,'أي الكلمات علم لمكان من المجموعة التي تضم '+w+' و'+f+'؟','Which word is a place name in the group with '+we+' and '+fe+'?',x(place,ple),x(w,we),x(f,fe),'اسم المدينة علم.','The city name is a proper noun.');
 Q(2,'استبدل «'+f+'» بعلم مؤنث مناسب.','Replace the feminine common noun '+fe+' with a feminine proper name.',x(['مريم','سارة','زينب','هند','نور'][j],['Maryam','Sara','Zaynab','Hind','Noor'][j]),x(w,we),x('إلى','to'),'العلم يعين شخصاً بذاته.','A proper name identifies a specific person.');
 Q(2,'ما نوع «'+place+'» من حيث التعريف؟','What kind of definite noun is '+ple+'?',x('علم','Proper noun'),x('ضمير','Pronoun'),x('اسم إشارة','Demonstrative'),'اسم المدينة علم معرفة.','A city name is a definite proper noun.');
 // 3: definite article
@@ -65,7 +65,7 @@ Q(6,'استخرج الاسم الموصول: رأيتُ ال'+f+'َ التي ن�
 // 7 idafa
 Q(7,'استخرج المضاف من: '+w+'ُ '+n+'ِ جديدٌ.','Extract the possessed noun: The '+we+' of '+ne+' is new.',x(w,we),x(n,ne),x('جديد','new'),'المضاف هو الاسم الأول في التركيب.','The first noun is the mudaf.');
 ir(7,w+'ُ '+n+'ِ جديدٌ.',n,'مضاف إليه مجرور بالكسرة.','The '+we+' of '+ne+' is new.',x('مضاف إليه مجرور بالكسرة','Genitive possessor with kasra'),nom,obj);
-Q(7,'اختر تركيب الإضافة الصحيح.','Choose the correct construct phrase.',x(w+'ُ '+n+'ِ',ne+'’s '+we),x('ال'+w+'ُ '+n+'ِ','incorrect: article on mudaf'),x(w+'ٌ '+n+'ِ','incorrect: tanwin on mudaf'),'المضاف لا ينون ولا يقترن بأل في الإضافة المعنوية هنا.','In this ordinary construct the mudaf has neither tanwin nor al-.');
+Q(7,'اختر تركيب الإضافة الصحيح باستعمال '+w+' و'+n+'.','Choose the correct construct phrase using '+we+' and '+ne+'.',x(w+'ُ '+n+'ِ',ne+'’s '+we),x('ال'+w+'ُ '+n+'ِ','incorrect: article on mudaf'),x(w+'ٌ '+n+'ِ','incorrect: tanwin on mudaf'),'المضاف لا ينون ولا يقترن بأل في الإضافة المعنوية هنا.','In this ordinary construct the mudaf has neither tanwin nor al-.');
 Q(7,'هل «'+w+'ُ '+n+'ِ» معرفة؟','Is the construct '+ne+'’s '+we+' definite?',x('نعم، بالإضافة إلى معرفة','Yes, by addition to a definite noun'),x('لا، نكرة','No, indefinite'),x('فعل','Verb'),'المضاف إلى معرفة يكتسب التعريف.','A noun added to a definite possessor becomes definite.');
 // 8 past
 Q(8,'استخرج الفعل الماضي من: '+s,'Extract the past verb: '+se,x(v+'َ',ve+' (past)'),x(n,ne),x(o,oe),'الفعل يدل على زمن ماضٍ.','It indicates past time.');
@@ -79,14 +79,14 @@ Q(9,'استخرج الفعل المضارع المرفوع: '+pr+'ُ '+n+'ُ و�
 Q(9,'صحح: '+pr+'َ '+n+'ُ (دون ناصب).','Correct the verb ending without a governing particle.',x(pr+'ُ',ve+' (damma)'),x(pr+'َ',ve+' (fatha)'),x(pr+'ْ',ve+' (sukun)'),'الأصل في المضارع الرفع.','The default present mood is nominative.');
 // 10 subjunctive
 Q(10,'أكمل: لن '+pr+' __ '+n+'ُ.','Choose the ending after lan: '+ne+' will not '+ve+'.',x(pr+'َ',ve+' (fatha)'),x(pr+'ُ',ve+' (damma)'),x(pr+'ْ',ve+' (sukun)'),'لن تنصب المضارع.','Lan governs the subjunctive.');
-Q(10,'أعرب «'+pr+'َ» بعد لن.','Parse the verb after lan.',x('فعل مضارع منصوب بالفتحة الظاهرة','Subjunctive present with visible fatha'),mar,maj,'لن حرف نصب والمضارع صحيح الآخر.','Lan governs the subjunctive of the sound-ending verb.');
+Q(10,'أعرب «'+pr+'َ» بعد لن.','Parse '+pr+' after lan.',x('فعل مضارع منصوب بالفتحة الظاهرة','Subjunctive present with visible fatha'),mar,maj,'لن حرف نصب والمضارع صحيح الآخر.','Lan governs the subjunctive of the sound-ending verb.');
 Q(10,'اختر الناصب: أريدُ ___ '+pr+'َ '+n+'ُ.','Choose the subjunctive particle: I want '+ne+' to '+ve+'.',x('أنْ','to'),x('لم','did not'),x('هل','question particle'),'أنْ تنصب المضارع.','An governs the subjunctive.');
-Q(10,'صحح: لن '+pr+'ُ '+n+'ُ.','Correct the verb after lan.',x('لن '+pr+'َ','lan + subjunctive'),x('لن '+pr+'ُ','lan + indicative'),x('لن '+pr+'ْ','lan + jussive'),'علامة النصب الفتحة هنا.','Fatha is the required subjunctive ending.');
+Q(10,'صحح: لن '+pr+'ُ '+n+'ُ.','Correct '+pr+' after lan.',x('لن '+pr+'َ','lan + subjunctive'),x('لن '+pr+'ُ','lan + indicative'),x('لن '+pr+'ْ','lan + jussive'),'علامة النصب الفتحة هنا.','Fatha is the required subjunctive ending.');
 // 11 jussive
 Q(11,'أكمل: لم '+pr+' __ '+n+'ُ.','Choose the ending after lam: '+ne+' did not '+ve+'.',x(pr+'ْ',ve+' (sukun)'),x(pr+'ُ',ve+' (damma)'),x(pr+'َ',ve+' (fatha)'),'لم تجزم المضارع.','Lam governs the jussive.');
-Q(11,'أعرب «'+pr+'ْ» بعد لم.','Parse the verb after lam.',x('فعل مضارع مجزوم بالسكون الظاهر','Jussive present with visible sukun'),mar,man,'المضارع صحيح الآخر يجزم بالسكون.','A sound-ending present verb takes sukun in the jussive.');
+Q(11,'أعرب «'+pr+'ْ» بعد لم.','Parse '+pr+' after lam.',x('فعل مضارع مجزوم بالسكون الظاهر','Jussive present with visible sukun'),mar,man,'المضارع صحيح الآخر يجزم بالسكون.','A sound-ending present verb takes sukun in the jussive.');
 Q(11,'اختر الجازم: ___ '+pr+'ْ '+n+'ُ.','Choose a jussive particle.',x('لم','did not'),x('لن','will not'),x('أنْ','to'),'لم جازمة، ولن وأن ناصبتان.','Lam is jussive; lan and an are subjunctive.');
-Q(11,'صحح: لم '+pr+'ُ '+n+'ُ.','Correct the verb after lam.',x('لم '+pr+'ْ','lam + jussive'),x('لم '+pr+'ُ','lam + indicative'),x('لم '+pr+'َ','lam + subjunctive'),'علامة الجزم السكون هنا.','Sukun is the required jussive ending.');
+Q(11,'صحح: لم '+pr+'ُ '+n+'ُ.','Correct '+pr+' after lam.',x('لم '+pr+'ْ','lam + jussive'),x('لم '+pr+'ُ','lam + indicative'),x('لم '+pr+'َ','lam + subjunctive'),'علامة الجزم السكون هنا.','Sukun is the required jussive ending.');
 // 12 five verbs
 let stem=pr.slice(1);
 Q(12,'أكمل: الطالبان ي'+stem+' __.','Complete: The two students '+ve+'.',x('ي'+stem+'ان','dual indicative'),x('ي'+stem+'ا','dual without nun'),x('ي'+stem+'ون','plural indicative'),'الأفعال الخمسة ترفع بثبوت النون.','The five verbs retain nun in the indicative.');
@@ -94,7 +94,7 @@ Q(12,'صحح: لن ي'+stem+'ون.','Correct the plural verb after lan.',x('لن
 Q(12,'أعرب «ي'+stem+'وا» في: لم ي'+stem+'وا.','Parse the plural verb after lam.',x('مضارع مجزوم بحذف النون والواو فاعل','Jussive present with nun omitted; waw is subject'),x('مرفوع بثبوت النون','Indicative retaining nun'),x('مجزوم بالسكون','Jussive with sukun'),'واو الجماعة ضمير في محل رفع فاعل.','Plural waw is a pronoun in subject position.');
 Q(12,'أعرب «ت'+stem+'ين» في: أنتِ ت'+stem+'ين.','Parse the feminine second-person present verb.',x('مضارع مرفوع بثبوت النون والياء فاعل','Indicative retaining nun; ya is subject'),x('منصوب بحذف النون','Subjunctive dropping nun'),x('مرفوع بالضمة','Indicative with damma'),'من الأفعال الخمسة لاتصاله بياء المخاطبة.','It is one of the five verbs with addressee ya.');
 // 13 imperative
-let command=['اكتب','اقرأ','احفظ','اشرح','راجع'][j];
+let command=['اكتب','ادرس','احفظ','اشرح','افحص'][j];
 Q(13,'حوّل إلى الأمر: '+pr+'ُ.','Convert the present verb to a singular imperative.',x(command+'ْ',ve+'!'),x(pr+'ُ',ve+' (present)'),x(v+'َ',ve+' (past)'),'الأمر طلب وقوع الفعل من المخاطب.','The imperative requests an action from the addressee.');
 Q(13,'أعرب «'+command+'ْ» في: '+command+'ْ '+o+'َ.','Parse the imperative in: '+ve+' '+oe+'!',x('فعل أمر مبني على السكون','Imperative built on sukun'),x('مضارع مجزوم','Jussive present'),x('ماضٍ مبني على الفتح','Past built on fatha'),'صحيح الآخر ولم يتصل به شيء.','It has a sound ending without a suffix.');
 Q(13,'استخرج فعل الأمر: '+command+'ْ '+o+'َ ثم استرحْ. (الفعل الأول)','Extract the first imperative: '+ve+' '+oe+', then rest.',x(command+'ْ',ve+'!'),x(o,oe),x('ثم','then'),'الفعل الأول طلب مباشر.','The first verb is a direct command.');
